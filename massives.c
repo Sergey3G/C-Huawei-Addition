@@ -1,19 +1,21 @@
 #include <stdio.h>
 
-void input_array(int array[][4], int size_y, int size_x);
-void print_array(const int array[][4], int size_y, int size_x);
+void input_array(int array[][5], int size_y, int size_x);
+void print_array(const int array[][5], int size_y, int size_x);
 
 int main()
 {
-    int array[3][4] = {{1, 2, 3, 4},
-                       {5, 6, 7, 8},
-                       {9, 10, 11, 12}};
+    int array[5][5] = {{0, 0, 0, 0, 0},
+                       {0, 0, 0, 0, 0},
+                       {0, 0, 0, 0, 0},
+		       {0, 0, 0, 0, 0},
+		       {0, 0, 0, 0, 0}};
     int rows = 0, columns = 0;
 
     printf("Please enter quantities of rows and columns: ");
     scanf("%d %d", &rows, &columns);
 
-    if (rows > 3 || columns > 4 || columns < 1 || rows < 1)
+    if (rows > 5 || columns > 5 || columns < 1 || rows < 1)
     {
         printf("Invalid sizes!");
         return 1;
@@ -26,7 +28,7 @@ int main()
 }
 
 
-void input_array(int array[][4], int size_y, int size_x)
+void input_array(int array[][5], int size_y, int size_x)
 {
     printf("Please enter your massive: \n");
     for (int y = 0; y < size_y; y++)
@@ -38,7 +40,7 @@ void input_array(int array[][4], int size_y, int size_x)
     }
 }
 
-void print_array(const int array[][4], int size_y, int size_x)
+void print_array(const int array[][5], int size_y, int size_x)
 {
     for (int y = 0; y < size_y; y++)
     {
