@@ -25,7 +25,6 @@ int main()
     char* strcat_str = my_strcat(some_str, str_to_add);
     printf("strcat string is %s\n", strcat_str);
 
-    // Для демонстрации my_strncat создадим новый буфер
     char another_str[100] = "Hello again!";
     char* strncat_str = my_strncat(another_str, str_to_add, 7);
     printf("strncat string is %s\n", strncat_str);
@@ -49,7 +48,7 @@ int my_puts(const char* str)
     }
     for (size_t i = 0; str[i] != '\0'; i++)
     {
-        if (putchar(str[i]) == EOF) return EOF; // Добавлена проверка ошибок вывода
+        if (putchar(str[i]) == EOF) return EOF;
     }
     if (putchar('\n') == EOF) return EOF;
     return 1;
@@ -62,14 +61,14 @@ const char* my_strchr(const char* str, int ch)
     {
         if (str[i] == ch)
             return &str[i];
-        if (str[i] == '\0') break; // Прерываем цикл при достижении конца строки
+        if (str[i] == '\0') break;
     }
     return NULL;
 }
 
 char* my_strcat(char* destination, const char* source)
 {
-    if (destination == NULL || source == NULL) return destination; // Проверка на NULL
+    if (destination == NULL || source == NULL) return destination;
     char* end_of_destination = destination;
     while (*end_of_destination != '\0')
     {
@@ -77,7 +76,7 @@ char* my_strcat(char* destination, const char* source)
     }
     while (*source != '\0')
     {
-        *end_of_destination++ = *source++; // Более компактная запись
+        *end_of_destination++ = *source++;
     }
     *end_of_destination = '\0';
     return destination;
