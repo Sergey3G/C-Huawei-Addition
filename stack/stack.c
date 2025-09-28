@@ -30,7 +30,7 @@ int main()
 	Stack stack = {};
 	construct_stack(&stack, 10);
 
-	for (size_t i = 0; i < 6; i++)
+	for (size_t i = 0; i < 20; i++)
 	{
 		push_stack(&stack, i + 1);
 	}
