@@ -1,48 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CANARY 0xDEADBABE
-
-typedef int data_t;
-
-struct Stack
-{
-	data_t* data;
-	size_t size;
-	size_t capacity;
-};
-
-enum Errors
-{
-	NO_ERRORS = 0,
-	SIZE_LT_CAPACITY = 1,
-	DATA_NULL_PTR = 2,
-	NEGATIVE_SIZE = 4,
-	DEAD_CANARY = 8
-};
-
-void construct_stack(Stack* stack, size_t stk_capacity);
-void destruct_stack(Stack* stack);
-void push_stack(Stack* stack, data_t value);
-data_t pop_stack(Stack* stack);
-Errors verify_stack(Stack* stack);
-void stack_dump(Stack* stack);
-
-int main()
-{
-	Stack stack = {};
-	construct_stack(&stack, 10);
-
-	for (size_t i = 0; i < 10; i++)
-	{
-		push_stack(&stack, i + 1);
-	}
-
-	stack_dump(&stack);
-
-	return 0;
-}
-
+#include "stack.h"
 
 Errors verify_stack(Stack* stack)
 {
