@@ -5,3 +5,5 @@ massives.c
 my_functions
 *.cpp
 stack/stack
+*.o
+stack/ass
