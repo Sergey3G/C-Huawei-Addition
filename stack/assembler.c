@@ -7,12 +7,9 @@
 char* input_to_buffer(const char* input_filename);
 size_t count_of_strings(const char* string);
 char** create_str_array(char* buffer, size_t str_count);
-// int output_to_file(const char* filename, char** str_array, int count);
-char** turn_into_byte(char** str_array, size_t count, size_t* bytecode_size);
 int my_atoi(const char* str);
 char* int_to_string(int number);
-int bytecode_output(const char* filename, char** bytecode, size_t count);
-void free_bytecode(char** bytecode, size_t size);
+int compile_to_bytecode(char** str_array, size_t count, const char* filename);
 
 int main()
 {
@@ -29,17 +26,7 @@ int main()
         free(buffer);
         return 1;
     }
-    size_t bytecode_size = 0;
-    char** bytecode = turn_into_byte(str_array, strings_count, &bytecode_size);
-    if (!bytecode)
-    {
-        free_bytecode(bytecode, bytecode_size);
-        return 1;
-    }
-    bytecode_output("byte_code.txt", bytecode, bytecode_size);
-    free_bytecode(bytecode, bytecode_size);
-    free(str_array);
-    free(buffer);
+    compile_to_bytecode(str_array, strings_count, "byte_code.txt");
 
     return 0;
 }
@@ -125,98 +112,6 @@ char** create_str_array(char* buffer, size_t str_count)
     return array;
 }
 
-/*
-int output_to_file(const char* filename, char** str_array, int count)
-{
-    FILE* file = fopen(filename, "w");
-    if (!file)
-    {
-        printf("Error: cannot open file %s\n", filename);
-        return 1;
-    }
-    for (int i = 0; i < count; i++)
-    {
-        fprintf(file, "%s\n", str_array[i]);
-    }
-
-    fclose(file);
-    return 0;
-}
-*/
-
-char** turn_into_byte(char** str_array, size_t count, size_t* bytecode_size)
-{
-    char** bytecode = (char**)calloc(count * 2, sizeof(char*));
-    if (!bytecode)
-    {
-        printf("Error: memory allocation failed!");
-        return NULL;
-    }
-
-    size_t bytecode_index = 0;
-
-    for (size_t i = 0; i < count; i++)
-    {
-        char* instruction = str_array[i];
-
-        if (!instruction || strlen(instruction) == 0)
-        {
-            continue;
-        }
-
-        while (isspace(*instruction))
-        {
-            instruction++;
-        }
-
-        if (strncmp(instruction, "PUSH", 4) == 0)
-        {
-            bytecode[bytecode_index++] = strdup("1");
-
-            int number = my_atoi(instruction + 4);
-            char* arg_str = int_to_string(number);
-            if (arg_str)
-            {
-                bytecode[bytecode_index++] = arg_str;
-            }
-        }
-        else if (strcmp(instruction, "ADD") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("2");
-        }
-        else if (strcmp(instruction, "SUB") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("3");
-        }
-        else if (strcmp(instruction, "SUB") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("4");
-        }
-        else if (strcmp(instruction, "MUL") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("5");
-        }
-        else if (strcmp(instruction, "DIV") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("6");
-        }
-        else if (strcmp(instruction, "SQRT") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("7");
-        }
-        else if (strcmp(instruction, "OUT") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("8");
-        }
-        else if (strcmp(instruction, "HLT") == 0)
-        {
-            bytecode[bytecode_index++] = strdup("0");
-        }
-    }
-    *bytecode_size = bytecode_index;
-    return bytecode;
-}
-
 int my_atoi(const char* str)
 {
 	int result = 0, sign = 1;
@@ -257,27 +152,89 @@ char* int_to_string(int number)
     return str;
 }
 
-int bytecode_output(const char* filename, char** bytecode, size_t count)
+int compile_to_bytecode(char** str_array, size_t count, const char* filename)
 {
     FILE* file = fopen(filename, "w");
     if (!file)
     {
-        printf("Error: memory allocation failed!");
+        printf("Error: cannot read file %s!\n", filename);
         return 1;
     }
 
+    int error_flag = 0;
+
     for (size_t i = 0; i < count; i++)
     {
-        fprintf(file, "%s\n", bytecode[i]);
+        char* instruction = str_array[i];
+        if (!instruction || !*instruction)
+        {
+            continue;
+        }
+
+        while (isspace(*instruction))
+        {
+            instruction++;
+        }
+
+        if (strncmp(instruction, "PUSH", 4) == 0)
+        {
+            fprintf(file, "1\n");
+
+            int number = my_atoi(instruction + 4);
+            fprintf(file, "%d\n", number);
+        }
+        else if (strcmp(instruction, "ADD") == 0)
+        {
+            fprintf(file, "2\n");
+        }
+        else if (strcmp(instruction, "SUB") == 0)
+        {
+            fprintf(file, "3\n");
+        }
+        else if (strcmp(instruction, "SUB") == 0)
+        {
+            fprintf(file, "4\n");
+        }
+        else if (strcmp(instruction, "MUL") == 0)
+        {
+            fprintf(file, "5\n");
+        }
+        else if (strcmp(instruction, "DIV") == 0)
+        {
+            fprintf(file, "6\n");
+        }
+        else if (strcmp(instruction, "SQRT") == 0)
+        {
+            fprintf(file, "7\n");
+        }
+        else if (strcmp(instruction, "OUT") == 0)
+        {
+            fprintf(file, "8\n");
+        }
+        else if (strcmp(instruction, "HLT") == 0)
+        {
+            fprintf(file, "0");
+        }
+        else
+        {
+            printf("You have grammatic error on line %lu!\n", i + 1);
+            error_flag = 1;
+            break;
+        }
+    }
+
+    fclose(file);
+
+    if (error_flag == 1)
+    {
+        file = fopen(filename, "w");
+        if (!file)
+        {
+            printf("Error: cannot clear %s content!\n", filename);
+            return 1;
+        }
+        fclose(file);
+        return 1;
     }
     return 0;
-}
-
-void free_bytecode(char** bytecode, size_t size)
-{
-    for (size_t i = 0; i < size; i++)
-    {
-        free(bytecode[i]);
-    }
-    free(bytecode);
 }

@@ -12,5 +12,7 @@ int main()
 
     stack_dump(&stack);
 
+	destruct_stack(&stack);
+
 	return 0;
 }
