@@ -5,5 +5,15 @@
 
 int* read_bytecode(char* filename)
 {
-    FILE* file = fread(filename, "r");
+    FILE* file = fopen(filename, "rb");
+    if (!file)
+    {
+        printf("Error: cannot open file %s!\n", filename);
+        return NULL;
+    }
+
+    size_t size = 0;
+    size_t read_size = fread();
+
+    int* bytecode = (int*)calloc();
 }

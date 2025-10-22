@@ -22,8 +22,7 @@ int main()
         return 1;
     }
 
-    size_t instruction_counter = 0;
-    int* bytecode = compile_to_bytecode(str_array, strings_count, &instruction_counter);
+    int* bytecode = compile_to_bytecode(str_array, strings_count);
     if (!bytecode)
     {
         for (size_t i = 0; i < strings_count; i++)
@@ -39,7 +38,7 @@ int main()
         printf("instructions[%ld]: %s\n", i + 1, str_array[i]);
     }
     printf("-----------------------------\n");
-    for (size_t i = 0; i < instruction_counter; i++)
+    for (size_t i = 0; i < (size_t)bytecode[0] + 1; i++)
     {
         printf("bytecode[%ld] = %d\n", i, bytecode[i]);
     }
@@ -51,8 +50,8 @@ int main()
         return 1;
     }
 
-    size_t wrote_count = fwrite(bytecode, sizeof(int), instruction_counter, output_file);
-    if (wrote_count != instruction_counter)
+    size_t wrote_count = fwrite(bytecode, sizeof(int), (size_t)bytecode[0], output_file);
+    if (wrote_count != (size_t)bytecode[0])
     {
         printf("Error: cannot correctly read file content!");
         return 1;
@@ -180,9 +179,9 @@ char* int_to_string(int number)
     return str;
 }
 
-int* compile_to_bytecode(char** str_array, size_t count, size_t* instruction_counter)
+int* compile_to_bytecode(char** str_array, size_t count)
 {
-    int* bytecode = (int*)calloc(count * 2, sizeof(int));
+    int* bytecode = (int*)calloc(count * 2 + 1, sizeof(int));
     if (!bytecode)
     {
         printf("Error: memory allocation failed!");
@@ -191,8 +190,12 @@ int* compile_to_bytecode(char** str_array, size_t count, size_t* instruction_cou
 
     int* start_bytecode = bytecode;
 
+    *start_bytecode = 0;
+    start_bytecode++;
+
     for (size_t i = 0; i < count; i++)
     {
+
         if (strncmp(str_array[i], "PUSH", 4) == 0)
         {
             char* start_instruction = str_array[i];
@@ -202,57 +205,57 @@ int* compile_to_bytecode(char** str_array, size_t count, size_t* instruction_cou
 
             *start_bytecode = my_atoi(start_instruction);
             start_bytecode++;
-            print_bytecode(bytecode, start_instruction, count, i);
-            *instruction_counter += 2;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *bytecode += 2;
         }
         else if (strcmp(str_array[i], "ADD") == 0)
         {
             *start_bytecode = ADD;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 1;
         }
         else if (strcmp(str_array[i], "SUB") == 0)
         {
             *start_bytecode = SUB;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 1;
         }
         else if (strcmp(str_array[i], "MUL") == 0)
         {
             *start_bytecode = MUL;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 1;
         }
         else if (strcmp(str_array[i], "DIV") == 0)
         {
             *start_bytecode = DIV;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 1;
         }
         else if (strcmp(str_array[i], "SQRT") == 0)
         {
             *start_bytecode = SQRT;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 2;
         }
         else if (strcmp(str_array[i], "OUT") == 0)
         {
             *start_bytecode = OUT;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 1;
         }
         else if (strcmp(str_array[i], "HLT") == 0)
         {
             *start_bytecode = HLT;
             start_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
-            *instruction_counter += 1;
+            *bytecode += 1;
         }
     }
 
