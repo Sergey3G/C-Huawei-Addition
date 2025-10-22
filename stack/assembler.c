@@ -4,16 +4,11 @@
 #include <string.h>
 #include <ctype.h>
 
-char* input_to_buffer(const char* input_filename);
-size_t count_of_strings(const char* string);
-char** create_str_array(char* buffer, size_t str_count);
-int my_atoi(const char* str);
-char* int_to_string(int number);
-int compile_to_bytecode(char** str_array, size_t count, const char* filename);
+#include "assembler.h"
 
 int main()
 {
-    char* buffer = input_to_buffer("instructions.txt");
+    char* buffer = input_to_buffer("instructions.asm");
     if (!buffer)
     {
         return 1;
@@ -26,9 +21,42 @@ int main()
         free(buffer);
         return 1;
     }
-    compile_to_bytecode(str_array, strings_count, "byte_code.txt");
 
-    return 0;
+    size_t instruction_counter = 0;
+    int* bytecode = compile_to_bytecode(str_array, strings_count, &instruction_counter);
+    if (!bytecode)
+    {
+        for (size_t i = 0; i < strings_count; i++)
+        {
+            free(str_array[i]);
+        }
+        free(str_array);
+        return 1;
+    }
+
+    for (size_t i = 0; i < strings_count - 1; i++)
+    {
+        printf("instructions[%ld]: %s\n", i + 1, str_array[i]);
+    }
+    printf("-----------------------------\n");
+    for (size_t i = 0; i < instruction_counter; i++)
+    {
+        printf("bytecode[%ld] = %d\n", i, bytecode[i]);
+    }
+
+    FILE* output_file = fopen("byte_code.bin", "wb");
+    if (!output_file)
+    {
+        printf("Error: cannot open file byte_code.bin!");
+        return 1;
+    }
+
+    size_t wrote_count = fwrite(bytecode, sizeof(int), instruction_counter, output_file);
+    if (wrote_count != instruction_counter)
+    {
+        printf("Error: cannot correctly read file content!");
+        return 1;
+    }
 }
 
 char* input_to_buffer(const char* input_filename)
@@ -152,89 +180,94 @@ char* int_to_string(int number)
     return str;
 }
 
-int compile_to_bytecode(char** str_array, size_t count, const char* filename)
+int* compile_to_bytecode(char** str_array, size_t count, size_t* instruction_counter)
 {
-    FILE* file = fopen(filename, "w");
-    if (!file)
+    int* bytecode = (int*)calloc(count * 2, sizeof(int));
+    if (!bytecode)
     {
-        printf("Error: cannot read file %s!\n", filename);
-        return 1;
+        printf("Error: memory allocation failed!");
+        return NULL;
     }
 
-    int error_flag = 0;
+    int* start_bytecode = bytecode;
 
     for (size_t i = 0; i < count; i++)
     {
-        char* instruction = str_array[i];
-        if (!instruction || !*instruction)
+        if (strncmp(str_array[i], "PUSH", 4) == 0)
         {
-            continue;
-        }
+            char* start_instruction = str_array[i];
+            *start_bytecode = PUSH;
+            start_instruction += 4;
+            start_bytecode++;
 
-        while (isspace(*instruction))
-        {
-            instruction++;
+            *start_bytecode = my_atoi(start_instruction);
+            start_bytecode++;
+            print_bytecode(bytecode, start_instruction, count, i);
+            *instruction_counter += 2;
         }
-
-        if (strncmp(instruction, "PUSH", 4) == 0)
+        else if (strcmp(str_array[i], "ADD") == 0)
         {
-            fprintf(file, "1\n");
-
-            int number = my_atoi(instruction + 4);
-            fprintf(file, "%d\n", number);
+            *start_bytecode = ADD;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
-        else if (strcmp(instruction, "ADD") == 0)
+        else if (strcmp(str_array[i], "SUB") == 0)
         {
-            fprintf(file, "2\n");
+            *start_bytecode = SUB;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
-        else if (strcmp(instruction, "SUB") == 0)
+        else if (strcmp(str_array[i], "MUL") == 0)
         {
-            fprintf(file, "3\n");
+            *start_bytecode = MUL;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
-        else if (strcmp(instruction, "SUB") == 0)
+        else if (strcmp(str_array[i], "DIV") == 0)
         {
-            fprintf(file, "4\n");
+            *start_bytecode = DIV;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
-        else if (strcmp(instruction, "MUL") == 0)
+        else if (strcmp(str_array[i], "SQRT") == 0)
         {
-            fprintf(file, "5\n");
+            *start_bytecode = SQRT;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
-        else if (strcmp(instruction, "DIV") == 0)
+        else if (strcmp(str_array[i], "OUT") == 0)
         {
-            fprintf(file, "6\n");
+            *start_bytecode = OUT;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
-        else if (strcmp(instruction, "SQRT") == 0)
+        else if (strcmp(str_array[i], "HLT") == 0)
         {
-            fprintf(file, "7\n");
-        }
-        else if (strcmp(instruction, "OUT") == 0)
-        {
-            fprintf(file, "8\n");
-        }
-        else if (strcmp(instruction, "HLT") == 0)
-        {
-            fprintf(file, "0");
-        }
-        else
-        {
-            printf("You have grammatic error on line %lu!\n", i + 1);
-            error_flag = 1;
-            break;
+            *start_bytecode = HLT;
+            start_bytecode++;
+            print_bytecode(bytecode, str_array[i], count, i);
+            *instruction_counter += 1;
         }
     }
 
-    fclose(file);
-
-    if (error_flag == 1)
-    {
-        file = fopen(filename, "w");
-        if (!file)
-        {
-            printf("Error: cannot clear %s content!\n", filename);
-            return 1;
-        }
-        fclose(file);
-        return 1;
-    }
-    return 0;
+    return bytecode;
 }
+
+void print_bytecode(int* bytecode, char* instruction, size_t count, size_t i)
+{
+    printf("Read instruction number %ld: %s\n", i + 1, instruction);
+    printf("-----------------------------\n");
+    for (size_t j = 0; j < 2 * count; j++)
+    {
+        printf("bytecode[%ld] = %d\n", j, bytecode[j]);
+    }
+    printf("-----------------------------\n");
+    return;
+}
+
