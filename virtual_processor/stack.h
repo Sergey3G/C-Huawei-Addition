@@ -1,7 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#define CANARY 0xDEADBABE
+#define CANARY 0xDEDDED
 
 typedef int data_t;
 

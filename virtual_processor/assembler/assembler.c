@@ -8,7 +8,7 @@
 
 int main()
 {
-    char* buffer = input_to_buffer("instructions.asm");
+    char* buffer = input_to_buffer("../instructions.asm");
     if (!buffer)
     {
         return 1;
@@ -50,8 +50,8 @@ int main()
         return 1;
     }
 
-    size_t wrote_count = fwrite(bytecode, sizeof(int), (size_t)bytecode[0], output_file);
-    if (wrote_count != (size_t)bytecode[0])
+    size_t wrote_count = fwrite(bytecode, sizeof(int), (size_t)bytecode[0] + 1, output_file);
+    if (wrote_count != (size_t)bytecode[0] + 1)
     {
         printf("Error: cannot correctly read file content!");
         return 1;

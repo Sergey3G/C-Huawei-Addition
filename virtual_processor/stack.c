@@ -6,57 +6,95 @@
 Errors verify_stack(Stack* stack)
 {
 	Errors errors = NO_ERRORS;
-	if (stack->data == NULL)
+	if (!stack)
+	{
+		printf("verify_stack aborted: stack pointer is NULL!");
 		errors = (Errors)(errors | DATA_NULL_PTR);
+	}
+	if (stack->data == NULL)
+	{
+		errors = (Errors)(errors | DATA_NULL_PTR);
+	}
 	if (stack->size > stack->capacity)
+	{
 		errors = (Errors)(errors | SIZE_LT_CAPACITY);
-	if (stack->size < 0)
+	}
+	if ((int)stack->size < 0)
+	{
 		errors = (Errors)(errors | NEGATIVE_SIZE);
-	if (stack->data[0] != CANARY || stack->data[stack->capacity + 1] != CANARY)
-		errors = (Errors)(errors | DEAD_CANARY);
-
-	if (errors & DATA_NULL_PTR)
-		printf("Error: incorrect data pointer!");
-	if (errors & SIZE_LT_CAPACITY)
-		printf("Error: size is larger than capacity!");
-	if (errors & NEGATIVE_SIZE)
-		printf("Error: negative size!");
-	if (errors & DEAD_CANARY)
-		printf("Your stack was attacked, canary defence was defeated!");
-
+	}
+	if (stack->data)
+	{
+		if (stack->data[0] != CANARY || stack->data[stack->capacity + 1] != CANARY)
+		{
+			errors = (Errors)(errors | DEAD_CANARY);
+		}
+	}
 	return errors;
 }
 
 
 void stack_dump(Stack* stack)
 {
-	Errors verify = verify_stack(stack);
-	if (verify != NO_ERRORS)
+	printf("\n================ STACK DUMP ================\n");
+
+	if (!stack)
 	{
-		printf("Stack is corrupted, error code is %d\n", verify);
-		if (verify & DEAD_CANARY)
-		{
-			destruct_stack(stack);
-		}
+		printf("Aborted: stack is null!");
+		printf("============================================\n\n");
 		return;
 	}
+
+	Errors err = verify_stack(stack);
+
+	printf("Stack address: %p\n", (void*)stack);
+	printf("Data pointer: %p\n", (void*)stack->data);
+	printf("Size: %zu\n", stack->size);
+	printf("Capacity: %zu\n", stack->capacity);
+	printf("Error flags: %d (", err);
+
+	if (err = NO_ERRORS)
+	{
+		printf("NO_ERRORS");
+	}
+	else
+	{
+		if (err & DATA_NULL_PTR) printf("DATA_NULL_PTR");
+		if (err & SIZE_LT_CAPACITY) printf("SIZE_LT_CAPACITY");
+		if (err & NEGATIVE_SIZE) printf("NEGATIVE_SIZE");
+		if (err & DEAD_CANARY) printf("DEAD CANARY");
+	}
+	printf(")\n");
+
+	if (err != NO_ERRORS)
+	{
+		printf("Stack is corrupted! Dump aborted.\n");
+		printf("============================================\n\n");
+		return;
+	}
+
+	printf("\n--- Memory formation ---\n");
+	printf("[Left canary] = 0x%X\n", stack->data[0]);
 
 	for (size_t i = 1; i <= stack->capacity; i++)
 	{
 		if (i <= stack->size)
 		{
-			printf("stack[%ld] = %d is filled\n", i, stack->data[i]);
+			printf(" * [%02zu] = %d (used)\n", i, stack->data[i]);
 		}
 		else
 		{
-			printf("stack[%ld] = %d is empty\n", i, stack->data[i]);
+			printf("   [%02zu] = %d (free)\n", i, stack->data[i]);
 		}
 	}
+
+	printf("[Right canary] = 0x%X\n", stack->data[stack->capacity + 1]);
+	printf("============================================\n\n");
 }
 
 
 void construct_stack(Stack* stack, size_t stk_capacity)
-{ // TODO: проверять, что ne null
+{
 	if (!stack)
 	{
 		printf("Stack is null!");
@@ -116,13 +154,13 @@ data_t pop_stack(Stack* stack)
 	if (!stack)
 	{
 		printf("Stack is null!\n");
-		return -0xDEADBABE;
+		return -0xDEDDED;
 	}
 
 	if (stack->size < 1)
 	{
 		printf("Stack is empty!\n");
-		return -0xDEADBABE;
+		return -0xDEDDED;
 	}
 	data_t elem = stack->data[stack->size]; // TODO: пока сильно зависит от размеров
 	stack->data[stack->size--] = 0;

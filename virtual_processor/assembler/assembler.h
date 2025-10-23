@@ -2,7 +2,7 @@
 #define ASSEMBLER_H
 
 
-enum Instructions
+typedef enum Instructions
 {
     PUSH = 1,
     ADD = 2,
@@ -12,7 +12,7 @@ enum Instructions
     SQRT = 6,
     OUT = 7,
     HLT = 0
-};
+} Instructions;
 
 char* input_to_buffer(const char* input_filename);
 size_t count_of_strings(const char* string);
