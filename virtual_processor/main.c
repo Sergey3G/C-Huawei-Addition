@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "stack.h"
 #include "ariphmetics.h"
 #include "processor.h"
 
@@ -12,7 +11,15 @@ int main()
 	{
 		return 1;
 	}
-	print_bytecode(bytecode, bytecode[0] + 1);
-	free(bytecode);
+
+	Stack stack = {};
+	construct_stack(&stack, 10);
+
+	Processor processor = {};
+	construct_processor(&processor, &stack, bytecode);
+
+	processor_dump(&processor);
+	destruct_stack(&stack);
+	destruct_processor(&processor);
 	return 0;
 }

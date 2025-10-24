@@ -80,7 +80,6 @@ void destruct_processor(Processor* processor)
     if (processor->stack)
     {
         destruct_stack(processor->stack);
-        free(processor->stack);
         processor->stack = NULL;
     }
     if (processor->bytecode)
@@ -114,6 +113,8 @@ ProcessorErrors verify_processor(const Processor* processor)
     {
         err = (ProcessorErrors)(err | PROC_STACK_ERROR);
     }
+
+    return err;
 }
 
 void processor_dump(const Processor* processor)
@@ -150,7 +151,7 @@ void processor_dump(const Processor* processor)
     stack_dump(processor->stack);
 
     printf("\n--- Bytecode preview ---\n");
-    for (int i = 0; i < max(processor->bytecode[0], 10) && processor->bytecode && processor->bytecode[i] != 0; i++)
+    for (int i = 0; i < min(processor->bytecode[0] + 1, 10) && processor->bytecode; i++)
     {
         printf("[%02d] = %d\n", i, processor->bytecode[i]);
     }

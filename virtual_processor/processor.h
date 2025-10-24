@@ -3,7 +3,7 @@
 
 #include "stack.h"
 
-#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 
 typedef struct Processor
 {
