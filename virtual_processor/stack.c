@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "stack.h"
+#include "instructions.h"
 
 Errors verify_stack(Stack* stack)
 {
@@ -59,9 +60,9 @@ void stack_dump(Stack* stack)
 	}
 	else
 	{
-		if (err & DATA_NULL_PTR) printf("DATA_NULL_PTR");
-		if (err & SIZE_LT_CAPACITY) printf("SIZE_LT_CAPACITY");
-		if (err & NEGATIVE_SIZE) printf("NEGATIVE_SIZE");
+		if (err & DATA_NULL_PTR) printf("DATA NULL PTR");
+		if (err & SIZE_LT_CAPACITY) printf("SIZE LT CAPACITY");
+		if (err & NEGATIVE_SIZE) printf("NEGATIVE SIZE");
 		if (err & DEAD_CANARY) printf("DEAD CANARY");
 	}
 	printf(")\n");
@@ -93,7 +94,7 @@ void stack_dump(Stack* stack)
 }
 
 
-void construct_stack(Stack* stack, size_t stk_capacity)
+Errors construct_stack(Stack* stack, size_t stk_capacity)
 {
 	if (!stack)
 	{
@@ -110,6 +111,9 @@ void construct_stack(Stack* stack, size_t stk_capacity)
 	stack->size = 0;
 	stack->data[0] = CANARY;
 	stack->data[stack->capacity + 1] = CANARY;
+
+	err = verify_stack(stack);
+	return err;
 }
 
 void destruct_stack(Stack* stack)
@@ -120,12 +124,12 @@ void destruct_stack(Stack* stack)
 	stack->capacity = 0;
 }
 
-void push_stack(Stack* stack, data_t value)
+Errors push_stack(Stack* stack, data_t value)
 {
-	if (!stack)
+	Errors err = verify_stack(stack);
+	if (err != NO_ERRORS)
 	{
-		printf("Stack is null!");
-		return;
+		return err;
 	}
 	if (stack->size >= stack->capacity)
 	{
@@ -147,20 +151,33 @@ void push_stack(Stack* stack, data_t value)
 		stack->data[stack->capacity + 1] = CANARY;
 	}
 	stack->data[++stack->size] = value;
+
+	err = verify_stack(stack);
+	return err;
 }
 
-data_t pop_stack(Stack* stack)
+data_t pop_stack(Stack* stack, Errors* err)
 {
 	if (!stack)
 	{
 		printf("Stack is null!\n");
-		return -0xDEDDED;
+		return -CANARY;
+	}
+
+	if (*err != NO_ERRORS)
+	{
+		*err = verify_stack(stack);
+		if (*err != NO_ERRORS)
+		{
+			printf("Error: stack is corrupted!\n");
+			return -CANARY;
+		}
 	}
 
 	if (stack->size < 1)
 	{
 		printf("Stack is empty!\n");
-		return -0xDEDDED;
+		return -CANARY;
 	}
 	data_t elem = stack->data[stack->size]; // TODO: пока сильно зависит от размеров
 	stack->data[stack->size--] = 0;

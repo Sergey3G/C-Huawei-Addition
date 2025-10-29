@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #include "assembler.h"
+#include "../virtual_processor/instructions.h"
 
 char* input_to_buffer(const char* input_filename)
 {
@@ -115,18 +116,6 @@ int my_atoi(const char* str)
 	return sign * result;
 }
 
-char* int_to_string(int number)
-{
-    size_t len = (size_t)snprintf(NULL, 0, "%d", number);
-    char* str = (char*)malloc(len + 1);
-
-    if (str)
-    {
-        snprintf(str, len + 1, "%d", number);
-    }
-    return str;
-}
-
 int* compile_to_bytecode(char** str_array, size_t count)
 {
     int* bytecode = (int*)calloc(count * 2 + 1, sizeof(int));
@@ -136,10 +125,10 @@ int* compile_to_bytecode(char** str_array, size_t count)
         return NULL;
     }
 
-    int* start_bytecode = bytecode;
+    int* changing_bytecode = bytecode;
 
-    *start_bytecode = 0;
-    start_bytecode++;
+    *changing_bytecode = 0;
+    changing_bytecode++;
 
     for (size_t i = 0; i < count; i++)
     {
@@ -147,61 +136,61 @@ int* compile_to_bytecode(char** str_array, size_t count)
         if (strncmp(str_array[i], "PUSH", 4) == 0)
         {
             char* start_instruction = str_array[i];
-            *start_bytecode = PUSH;
+            *changing_bytecode = PUSH;
             start_instruction += 4;
-            start_bytecode++;
+            changing_bytecode++;
 
-            *start_bytecode = my_atoi(start_instruction);
-            start_bytecode++;
+            *changing_bytecode = my_atoi(start_instruction);
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 2;
         }
         else if (strcmp(str_array[i], "ADD") == 0)
         {
-            *start_bytecode = ADD;
-            start_bytecode++;
+            *changing_bytecode = ADD;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 1;
         }
         else if (strcmp(str_array[i], "SUB") == 0)
         {
-            *start_bytecode = SUB;
-            start_bytecode++;
+            *changing_bytecode = SUB;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 1;
         }
         else if (strcmp(str_array[i], "MUL") == 0)
         {
-            *start_bytecode = MUL;
-            start_bytecode++;
+            *changing_bytecode = MUL;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 1;
         }
         else if (strcmp(str_array[i], "DIV") == 0)
         {
-            *start_bytecode = DIV;
-            start_bytecode++;
+            *changing_bytecode = DIV;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 1;
         }
         else if (strcmp(str_array[i], "SQRT") == 0)
         {
-            *start_bytecode = SQRT;
-            start_bytecode++;
+            *changing_bytecode = SQRT;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 2;
         }
         else if (strcmp(str_array[i], "OUT") == 0)
         {
-            *start_bytecode = OUT;
-            start_bytecode++;
+            *changing_bytecode = OUT;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 1;
         }
         else if (strcmp(str_array[i], "HLT") == 0)
         {
-            *start_bytecode = HLT;
-            start_bytecode++;
+            *changing_bytecode = HLT;
+            changing_bytecode++;
             print_bytecode(bytecode, str_array[i], count, i);
             *bytecode += 1;
         }

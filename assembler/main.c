@@ -36,7 +36,7 @@ int main()
         printf("bytecode[%ld] = %d\n", i, bytecode[i]);
     }
 
-    FILE* output_file = fopen("../byte_code.bin", "wb");
+    FILE* output_file = fopen("../virtual_processor/byte_code.bin", "wb");
     if (!output_file)
     {
         printf("Error: cannot open file byte_code.bin!");

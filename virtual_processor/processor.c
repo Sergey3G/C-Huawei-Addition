@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "processor.h"
 
@@ -15,8 +16,6 @@ int* read_bytecode(char* filename)
     size_t size = 0;
     fread(&size, sizeof(int), 1, file);
 
-    rewind(file);
-
     int* bytecode = (int*)calloc(size + 1, sizeof(int));
     if (!bytecode)
     {
@@ -24,8 +23,10 @@ int* read_bytecode(char* filename)
         return NULL;
     }
 
-    size_t read_size = fread(bytecode, sizeof(int), size + 1, file);
-    if (read_size != size + 1)
+    bytecode[0] = size;
+
+    size_t read_size = fread(bytecode + 1, sizeof(int), size, file);
+    if (read_size != size)
     {
         printf("Error: cannot read file content correctly!");
     }
@@ -73,6 +74,12 @@ void construct_processor(Processor* processor, Stack* stack, int* bytecode)
     processor->stack = stack;
     processor->bytecode = bytecode;
     processor->instruction_pointer = 0;
+    processor->registers[AX] = {AX, 0, 0};
+    processor->registers[BX] = {BX, 0, 0};
+    processor->registers[CX] = {CX, 0, 0};
+    processor->registers[DX] = {DX, 0, 0};
+    processor->ram[14400];
+    memset(processor->ram, 0, sizeof(processor->ram));
 }
 
 void destruct_processor(Processor* processor)
@@ -90,28 +97,28 @@ void destruct_processor(Processor* processor)
     processor->instruction_pointer = 0;
 }
 
-ProcessorErrors verify_processor(const Processor* processor)
+Errors verify_processor(const Processor* processor)
 {
-    ProcessorErrors err = PROC_NO_ERRORS;
+    Errors err = NO_ERRORS;
 
     if (!processor)
     {
-        err = (ProcessorErrors)(err | PROC_NULL_PTR);
+        err = (Errors)(err | PROC_NULL_PTR);
     }
 
     if (!processor->stack)
     {
-        err = (ProcessorErrors)(err | PROC_INVALID_STACK);
+        err = (Errors)(err | PROC_INVALID_STACK);
     }
 
     if (!processor->bytecode)
     {
-        err = (ProcessorErrors)(err | PROC_INVALID_BYTECODE);
+        err = (Errors)(err | PROC_INVALID_BYTECODE);
     }
 
     if (processor->stack && verify_stack(processor->stack) != NO_ERRORS)
     {
-        err = (ProcessorErrors)(err | PROC_STACK_ERROR);
+        err = (Errors)(err | verify_stack(processor->stack));
     }
 
     return err;
@@ -128,15 +135,15 @@ void processor_dump(const Processor* processor)
         return;
     }
 
-    ProcessorErrors err = verify_processor(processor);
+    Errors err = verify_processor(processor);
 
     printf("Processor address: %p\n", (void*)processor);
     printf("Stack address: %p\n", (void*)processor->stack);
     printf("Bytecode address: %p\n", (void*)processor->bytecode);
-    printf("Instruction pointer: %ld", processor->instruction_pointer);
+    printf("Instruction pointer: %ld\n", processor->instruction_pointer);
     printf("Error flags: %d (", err);
 
-    if (err != PROC_NO_ERRORS)
+    if (err != NO_ERRORS)
     {
         printf("Processor corrupted! Attempting stack dump...\n");
         if (processor->stack)
@@ -147,12 +154,75 @@ void processor_dump(const Processor* processor)
         return;
     }
 
+    printf("\n--- Registers ---\n");
+    for (int i = 0; i < 4; i++)
+    {
+        printf("%s = %d (state = %d)\n",
+               (processor->registers[i].name == AX) ? "AX" :
+               (processor->registers[i].name == BX) ? "BX" :
+               (processor->registers[i].name == CX) ? "CX" : "DX",
+                processor->registers[i].value,
+                processor->registers[i].state);
+    }
+
     printf("\n--- Stack state ---\n");
     stack_dump(processor->stack);
 
     printf("\n--- Bytecode preview ---\n");
-    for (int i = 0; i < min(processor->bytecode[0] + 1, 10) && processor->bytecode; i++)
+    for (size_t i = 0; i < min(processor->bytecode[0] + 1, 10) && processor->bytecode; i++)
     {
         printf("[%02d] = %d\n", i, processor->bytecode[i]);
     }
 }
+
+Errors execute_bytecode(Processor* cpu)
+{
+    Errors err = verify_processor(cpu);
+
+    if (err != NO_ERRORS)
+    {
+        return err;
+    }
+
+    while (cpu->instruction_pointer < cpu->bytecode[0] + 1)
+    {
+        switch (cpu->bytecode[cpu->instruction_pointer])
+        {
+            case PUSH:
+                cpu->instruction_pointer++;
+                err = stack_push(cpu->stack, cpu->bytecode[cpu->instruction_pointer]);
+                if (err != NO_ERRORS)
+                {
+                    return err;
+                }
+                cpu->instruction_pointer++;
+            case ADD:
+                err = stack_binary_op(cpu->stack, ADD);
+                if (err != NO_ERRORS)
+                {
+                    return err;
+                }
+            case SUB:
+                err = stack_binary_op(cpu->stack, SUB);
+                if (err != NO_ERRORS)
+                {
+                    return err;
+                }
+            case MUL:
+                err = stack_binary_op(cpu->stack, MUL);
+                if (err != NO_ERRORS)
+                {
+                    return err;
+                }
+            case DIV:
+                err = stack_div(cpu->stack);
+                if (err != NO_ERRORS)
+                {
+                    return err;
+                }
+            // i stopped here
+        }
+    }
+}
+
+

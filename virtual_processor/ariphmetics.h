@@ -3,11 +3,9 @@
 
 #include "stack.h"
 
-Errors stack_add(Stack* stack);
-Errors stack_sub(Stack* stack);
-Errors stack_mul(Stack* stack);
+Errors stack_binary_op(Stack* stack, int code);
 Errors stack_div(Stack* stack);
-// Errors stack_sqrt(Stack* stack);
+Errors stack_sqrt(Stack* stack);
 
 #endif
 
