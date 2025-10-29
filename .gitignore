@@ -4,7 +4,7 @@ massives
 massives.c
 my_functions
 *.cpp
-virtual_processor/assembler/asm
+assembler/asm
 *.o
 virtual_processor/program
 .vscode
