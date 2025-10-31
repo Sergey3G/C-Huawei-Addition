@@ -1,10 +1,6 @@
-functions
 *.exe
-massives
-massives.c
-my_functions
 *.cpp
-assembler/asm
+task2 cpu + asm/assembler/asm
 *.o
-virtual_processor/program
+task2 cpu+asm/virtual_processor/program
 .vscode
